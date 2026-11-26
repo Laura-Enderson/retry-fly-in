@@ -502,8 +502,6 @@ class Orchestrator():
         Returns:
             list[list[str]]: Movement logs grouped by simulation turn.
         """
-        for drone in self.real_graph.drones:
-            self.real_graph.start_hub.list_of_drones_in.append(drone)
         self.paths = Orchestrator.find_paths(self.real_graph)
         all_logs = []
         while (True):

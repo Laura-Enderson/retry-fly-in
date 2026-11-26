@@ -18,22 +18,24 @@ A network consists of:
 Run make commands in the terminal:
 
 - `install`: Install the project dependencies using uv.
-- `run`: Execute the main script of the project using:
-```
-uv run python -m src
-```
+- `run`: Execute the main script of the project.
 - `debug`: Run the main script in debug mode using Python's built-in debugger (pdb).
 - `clean`: Remove temporary files and caches (e.g., __pycache__, .mypy_cache) to keep the project environment clean.
 - `fclean`: Remove temporary files and the .venv directory created by uv.
 - `lint`: Execute the following commands:
 ```
-flake8 ./src and mypy ./src --warn-return-any
---warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs
---check-untyped-defs
+	@uv run flake8 . --exclude=.venv
+	@uv run mypy . --exclude=.venv \
+	--warn-return-any \
+	--warn-unused-ignores \
+	--ignore-missing-imports \
+	--disallow-untyped-defs \
+	--check-untyped-defs
 ```
 - `lint-strict`: Execute the following commands:
 ```
-flake8 ./src and mypy ./src --strict
+	@uv run flake8 . --exclude=.venv
+	@uv run mypy . --strict --exclude=.venv
 ```
 
 **How does it work (make run)?**
