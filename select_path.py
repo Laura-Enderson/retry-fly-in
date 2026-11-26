@@ -24,7 +24,7 @@ class Tui():
             ".git"
         ]
         txt_files = []
-        for file in root_path.rglob("*.txt"):
+        for file in root_path.rglob("*"):
             relative_parts = file.relative_to(".").parts
             if any(part in excluded_dirs for part in relative_parts[:-1]):
                 continue
