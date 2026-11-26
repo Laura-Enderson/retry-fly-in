@@ -201,8 +201,6 @@ class Gui():
         """
         moving_drones: list[dict[str, Any]] = []
         for drone in graph_now.drones:
-            if drone.loc == graph_next.drones[drone.id - 1].loc:
-                continue
             if isinstance(drone.loc, Hub):
                 start_loc: tuple[float, float] = drone.loc.coord
             else:

@@ -431,10 +431,22 @@ class Orchestrator():
         if next_loc_to_go is None:
             return
         if next_loc_to_go.zone == ZoneType.RESTRICTED:
-            next_loc_to_go = graph.links[graph.links.index(next(
-                link for link in graph.links
-                if (drone.loc in link.linked_zones
-                    and next_loc_to_go in link.linked_zones)))]
+            next_loc_cap = 0
+            connected_links_to_next = [
+                li for li in graph.links if next_loc_to_go in li.linked_zones
+                ]
+            for connected_link in connected_links_to_next:
+                for dr in connected_link.list_of_drones_in:
+                    if dr.previous_loc != next_loc_to_go:
+                        next_loc_cap += 1
+            if next_loc_cap < next_loc_to_go.max_drones:
+                next_loc_to_go = next(
+                    (link for link in graph.links
+                        if (drone.loc in link.linked_zones
+                            and next_loc_to_go in link.linked_zones)),
+                    None)
+            else:
+                next_loc_to_go = None
         drone.next_loc = next_loc_to_go
 
     @staticmethod
