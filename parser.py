@@ -67,7 +67,7 @@ class Checker():
     @staticmethod
     def check_hub_metadata(
         full_line: str, line: str, hub: dict[str, str | int]
-        ) -> None:
+            ) -> None:
         """
         Extract and validate hub metadata.
 
@@ -99,7 +99,8 @@ class Checker():
                 if match:
                     if name in data:
                         raise ParseError(
-                            f"Duplicate parameter in metadata:{name} [line:{n}]"
+                            f"Duplicate parameter in metadata:{
+                                name} [line:{n}]"
                         )
                     matched = True
                     data[name] = (int(match.group(1)) if name ==
@@ -142,7 +143,7 @@ class Checker():
         Raises:
             ParseError: If the starting hub is missing or duplicated.
         """
-        start = []
+        start: list[dict[str, Any]] = []
         for i in range(len(lines)):
             result = re.match(
                 r"\s*start_hub\s*:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i])
@@ -316,7 +317,9 @@ class Checker():
         return (lines)
 
     @staticmethod
-    def check_link_metadata(full_line: str, line: str, link: dict[str, Any]) -> None:
+    def check_link_metadata(
+        full_line: str, line: str, link: dict[str, Any]
+            ) -> None:
         """
         Extract and validate link capacity metadata.
 
@@ -371,21 +374,37 @@ class Checker():
                 link["linked_zones"] = {result.group(1), result.group(2)}
                 if len(link["linked_zones"]) == 1:
                     raise ParseError(
-                        f"the zone '{result.group(1)}' is linked to itself [line: {n}]"
+                        f"the zone '{
+                            result.group(1)}' is linked to itself [line: {n}]"
                     )
                 for zone in link["linked_zones"]:
-                    all_hubs = [{g_hub["name"]: g_hub["line"]} for g_hub in graph["hubs"]]
-                    all_hubs.append({graph["start_hub"]["name"] : graph["start_hub"]["line"]})
-                    all_hubs.append({graph["end_hub"]["name"] : graph["end_hub"]["line"]})
+                    all_hubs = [
+                        {
+                            g_hub[
+                                "name"]: g_hub[
+                                    "line"]} for g_hub in graph["hubs"]]
+                    all_hubs.append(
+                        {
+                            graph[
+                                "start_hub"][
+                                    "name"]: graph["start_hub"]["line"]})
+                    all_hubs.append(
+                        {
+                            graph[
+                                "end_hub"][
+                                    "name"]: graph["end_hub"]["line"]})
                     all_names = [next(iter(hub)) for hub in all_hubs]
                     if zone not in all_names:
-                        raise ParseError(f"{zone} is an undefined zone [line: {n}]")
+                        raise ParseError(
+                            f"{zone} is an undefined zone [line: {n}]")
                     else:
                         for hub in all_hubs:
                             if next(iter(hub)) == zone:
                                 loc = hub[zone]
                         if loc > n:
-                            raise ParseError(f"{zone} is only defined later [line: {n}]")
+                            raise ParseError(
+                                f"{
+                                    zone} is only defined later [line: {n}]")
                 if len(lines[i]) > len(result.group(0)):
                     Checker.check_link_metadata(
                         lines[i],
@@ -430,7 +449,6 @@ class Parser():
         try:
             with open(path, "r") as f:
                 Checker.raw_lines = f.readlines()
-            
             lines = [
                     x for x in Checker.raw_lines if (
                         x.strip() and not x.lstrip().startswith("#")
@@ -454,5 +472,5 @@ class Parser():
                 line_number = Checker.raw_lines.index(line) + 1
                 print(f"\t[line:{line_number}] - '{line.strip()}'")
             raise ParseError(
-                f""
+                ""
             )
