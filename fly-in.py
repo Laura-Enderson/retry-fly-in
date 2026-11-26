@@ -1,6 +1,9 @@
 """Provide the Main entry point for the drone simulation application."""
 
-from src import Parser, ParseError, Orchestrator, Graph, Gui, Tui, InitError
+from select_path import Tui
+from display import Gui
+from parser import Parser, ParseError
+from elements import Orchestrator, Graph, InitError
 import copy
 
 

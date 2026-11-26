@@ -1,5 +1,5 @@
 run:
-	uv run python -m src
+	uv run python fly-in.py
 
 install:
 	@uv sync

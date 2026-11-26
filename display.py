@@ -10,7 +10,7 @@ zoom adjustments, simulation speed control, and pause management.
 """
 
 import pygame
-from ..tools.elements import Graph, Hub
+from elements import Graph, Hub
 import copy
 import time
 from typing import Any
@@ -443,7 +443,7 @@ class Gui():
         d = 100
         r_loc = (Gui.origin[0] + (loc[0] * d * scale),
                  Gui.origin[1] + ((-loc[1]) * d * scale))
-        drone = pygame.image.load("src/GUI/assets/drone.png").convert_alpha()
+        drone = pygame.image.load("drone.png").convert_alpha()
         drone = pygame.transform.scale(drone, (30 * scale, 30 * scale))
         font = pygame.font.Font(None, int(10 * scale))
         number = font.render(str(id), False, (225, 0, 0))
@@ -503,16 +503,16 @@ class Gui():
             )
             if hub.zone == "priority":
                 hub_represent = pygame.image.load(
-                    "src/GUI/assets/priority_zone.png").convert_alpha()
+                    "priority_zone.png").convert_alpha()
             elif hub.zone == "normal":
                 hub_represent = pygame.image.load(
-                    "src/GUI/assets/normal_zone.png").convert_alpha()
+                    "normal_zone.png").convert_alpha()
             elif hub.zone == "restricted":
                 hub_represent = pygame.image.load(
-                    "src/GUI/assets/restricted_zone.png").convert_alpha()
+                    "restricted_zone.png").convert_alpha()
             elif hub.zone == "blocked":
                 hub_represent = pygame.image.load(
-                    "src/GUI/assets/blocked_zone.png").convert_alpha()
+                    "blocked_zone.png").convert_alpha()
             hub_represent = Gui.recolor(
                 hub_represent, hub.color.as_rgb_tuple())
             hub_represent = pygame.transform.scale(

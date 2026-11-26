@@ -30,6 +30,8 @@ class ParseError(Exception):
 class Checker():
     """Validate and extract graph components from input lines."""
 
+    raw_lines: list[str] = []
+
     @staticmethod
     def check_and_take_drones_nb(
             lines: list[str], graph: dict[str, int | str | list[Any]]
@@ -63,7 +65,9 @@ class Checker():
         return lines
 
     @staticmethod
-    def check_hub_metadata(line: str, hub: dict[str, str | int]) -> None:
+    def check_hub_metadata(
+        full_line: str, line: str, hub: dict[str, str | int]
+        ) -> None:
         """
         Extract and validate hub metadata.
 
@@ -78,8 +82,9 @@ class Checker():
             ParseError: If metadata is invalid or duplicated.
         """
         result = re.fullmatch(r"\[([^\]]*)\]", line.strip())
+        n = Checker.raw_lines.index(full_line) + 1
         if not result:
-            raise ParseError("Invalid hub metadata format")
+            raise ParseError(f"Invalid hub metadata format [line:{n}]")
         content = result.group(1)
         patterns = {
             "zone": r"zone=(\w+)",
@@ -94,7 +99,7 @@ class Checker():
                 if match:
                     if name in data:
                         raise ParseError(
-                            f"Duplicate parameter in metadata:{name}"
+                            f"Duplicate parameter in metadata:{name} [line:{n}]"
                         )
                     matched = True
                     data[name] = (int(match.group(1)) if name ==
@@ -102,16 +107,22 @@ class Checker():
                     break
             if not matched:
                 raise ParseError(
-                    f"invalid parameter in metadata: {token}"
+                    f"invalid parameter in metadata: {token} [line:{n}]"
                 )
         if "max_drones" in data.keys():
             if int(data["max_drones"]) <= 0:
                 err1 = "Invalid hub metadata format: the"
                 raise ParseError(
-                    f"{err1} max_drones should be greater than 0."
+                    f"{err1} max_drones should be greater than 0 [line:{n}]"
                 )
+        if "zone" in data.keys():
+            zone = data["zone"]
+            if zone not in ["priority", "restricted", "blocked", "normal"]:
+                raise ParseError(
+                    f" '{zone}' is not a valid type of zone [line:{n}]"
+                    )
         if not data:
-            raise ParseError("Hub metadata cannot be empty")
+            raise ParseError(f"Hub metadata cannot be empty [line:{n}]")
         hub.update(data)
 
     @staticmethod
@@ -137,8 +148,20 @@ class Checker():
                 r"\s*start_hub\s*:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i])
             if result:
                 start.append({"match": result, "loc": i})
+        if len(start) == 0:
+            err = " - A start_hub should have the format: "
+            form = "start_hub: <name> <x> <y> [metadata]"
+            raise ParseError(f"No start_hub found{err}{form}")
         if len(start) != 1:
-            raise ParseError("There must be exactly one start_hub")
+            numbers = []
+            for el in start:
+                numbers.append(Checker.raw_lines.index(lines[el["loc"]]) + 1)
+            if len(set(numbers)) == 1:
+                raise ParseError("There must be exactly one start_hub")
+            raise ParseError(
+                "There must be exactly one start_hub"
+                f"; Found start_hub lines on lines: {numbers}"
+                )
         else:
             first = start[0]
             start_loc = cast(int, first["loc"])
@@ -148,9 +171,19 @@ class Checker():
             match = cast(re.Match[str], first["match"])
             start_hub["name"] = match.group(1)
             start_hub["coord"][0] = match.group(2)
+            if int(start_hub["coord"][0]) >= 1000:
+                start_hub["coord"][0] = 1000
+            if int(start_hub["coord"][0]) <= -1000:
+                start_hub["coord"][0] = -1000
             start_hub["coord"][1] = match.group(3)
+            if int(start_hub["coord"][1]) >= 1000:
+                start_hub["coord"][1] = 1000
+            if int(start_hub["coord"][1]) <= -1000:
+                start_hub["coord"][1] = -1000
+            start_hub["line"] = Checker.raw_lines.index(start_line) + 1
             if len(start_line) > len(match.group(0)):
                 Checker.check_hub_metadata(
+                    start_line,
                     start_line[len(match.group(0)):],
                     graph["start_hub"]
                 )
@@ -179,21 +212,43 @@ class Checker():
                 r"\s*end_hub\s*:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i])
             if result:
                 end.append({"match": result, "loc": i})
+        if len(end) == 0:
+            err = " - A end_hub should have the format: "
+            form = "end_hub: <name> <x> <y> [metadata]"
+            raise ParseError(f"No end_hub found{err}{form}")
         if len(end) != 1:
-            raise ParseError("There must be exactly one end_hub")
+            numbers = []
+            for el in end:
+                numbers.append(Checker.raw_lines.index(lines[el["loc"]]) + 1)
+            if len(set(numbers)) == 1:
+                raise ParseError("There must be exactly one end_hub")
+            raise ParseError(
+                "There must be exactly one end_hub"
+                f"; Found end_hub lines on lines: {numbers}"
+                )
         else:
             endpoint = end[0]
             loc = cast(int, endpoint["loc"])
             match = cast(re.Match[str], endpoint["match"])
-            start_line = lines[loc]
+            end_line = lines[loc]
             lines.pop(loc)
             end_hub = cast(dict[str, Any], graph["end_hub"])
             end_hub["name"] = match.group(1)
             end_hub["coord"][0] = match.group(2)
+            if int(end_hub["coord"][0]) >= 1000:
+                end_hub["coord"][0] = 1000
+            if int(end_hub["coord"][0]) <= -1000:
+                end_hub["coord"][0] = -1000
             end_hub["coord"][1] = match.group(3)
-            if len(start_line) > len(match.group(0)):
+            if int(end_hub["coord"][1]) >= 1000:
+                end_hub["coord"][1] = 1000
+            if int(end_hub["coord"][1]) <= -1000:
+                end_hub["coord"][1] = -1000
+            end_hub["line"] = Checker.raw_lines.index(end_line) + 1
+            if len(end_line) > len(match.group(0)):
                 Checker.check_hub_metadata(
-                    start_line[len(match.group(0)):],
+                    end_line,
+                    end_line[len(match.group(0)):],
                     end_hub
                 )
         return (lines)
@@ -218,12 +273,14 @@ class Checker():
         hubs: list[dict[str, Any]] = []
         to_remove: list[int] = []
         for i in range(len(lines)):
+            n = Checker.raw_lines.index(lines[i]) + 1
             hub: dict[str, Any] = {
                 "name": "",
                 "coord": [0, 0],
                 "zone": "normal",
                 "color": "white",
-                "max_drones": 1
+                "max_drones": 1,
+                "line": Checker.raw_lines.index(lines[i]) + 1
             }
             result = re.match(
                 r"\s*hub\s*:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i]
@@ -231,9 +288,18 @@ class Checker():
             if result:
                 hub["name"] = result.group(1)
                 hub["coord"][0] = result.group(2)
+                if int(hub["coord"][0]) >= 1000:
+                    hub["coord"][0] = 1000
+                if int(hub["coord"][0]) <= -1000:
+                    hub["coord"][0] = -1000
                 hub["coord"][1] = result.group(3)
+                if int(hub["coord"][1]) >= 1000:
+                    hub["coord"][1] = 1000
+                if int(hub["coord"][1]) <= -1000:
+                    hub["coord"][1] = -1000
                 if len(lines[i]) > len(result.group(0)):
                     Checker.check_hub_metadata(
+                        lines[i],
                         lines[i][len(result.group(0)):],
                         hub
                     )
@@ -241,7 +307,7 @@ class Checker():
                 if any(hub["name"] == hub_already_in["name"]
                        for hub_already_in in hubs):
                     raise ParseError(
-                        f"Duplicate zone name: {hub["name"]}"
+                        f"Duplicate zone name: {hub["name"]} [line:{n}]"
                     )
                 hubs.append(hub)
         for i in range(len(to_remove) - 1, -1, -1):
@@ -250,7 +316,7 @@ class Checker():
         return (lines)
 
     @staticmethod
-    def check_link_metadata(line: str, link: dict[str, Any]) -> None:
+    def check_link_metadata(full_line: str, line: str, link: dict[str, Any]) -> None:
         """
         Extract and validate link capacity metadata.
 
@@ -264,11 +330,12 @@ class Checker():
         Raises:
             ParseError: If the capacity is missing or invalid.
         """
+        n = Checker.raw_lines.index(full_line) + 1
         result = re.fullmatch(
             r"\[\s*max_link_capacity=(\d+)\s*\]", line.strip())
         if not result or int(result.group(1)) <= 0:
             err2 = "Invalid link metadata format, max_link_capacity metadata"
-            err3 = "where max is a number greater than 0."
+            err3 = f"where max is a number greater than 0 [line:{n}]"
             raise ParseError(
                 f"{err2} should look like: [max_link_capacity=<max>] {err3}"
             )
@@ -294,6 +361,7 @@ class Checker():
         links: list[dict[str, Any]] = []
         to_remove: list[int] = []
         for i in range(len(lines)):
+            n = Checker.raw_lines.index(lines[i]) + 1
             link: dict[str, Any] = {
                 "linked_zones": set(),
                 "max_link_capacity": 1
@@ -303,16 +371,24 @@ class Checker():
                 link["linked_zones"] = {result.group(1), result.group(2)}
                 if len(link["linked_zones"]) == 1:
                     raise ParseError(
-                        f"the zone '{result.group(1)}' is linked to itself."
+                        f"the zone '{result.group(1)}' is linked to itself [line: {n}]"
                     )
                 for zone in link["linked_zones"]:
-                    all_hubs = [hub["name"] for hub in graph["hubs"]]
-                    all_hubs.append(graph["start_hub"]["name"])
-                    all_hubs.append(graph["end_hub"]["name"])
-                    if zone not in all_hubs:
-                        raise ParseError(f"{zone} is an undefined zone.")
+                    all_hubs = [{g_hub["name"]: g_hub["line"]} for g_hub in graph["hubs"]]
+                    all_hubs.append({graph["start_hub"]["name"] : graph["start_hub"]["line"]})
+                    all_hubs.append({graph["end_hub"]["name"] : graph["end_hub"]["line"]})
+                    all_names = [next(iter(hub)) for hub in all_hubs]
+                    if zone not in all_names:
+                        raise ParseError(f"{zone} is an undefined zone [line: {n}]")
+                    else:
+                        for hub in all_hubs:
+                            if next(iter(hub)) == zone:
+                                loc = hub[zone]
+                        if loc > n:
+                            raise ParseError(f"{zone} is only defined later [line: {n}]")
                 if len(lines[i]) > len(result.group(0)):
                     Checker.check_link_metadata(
+                        lines[i],
                         lines[i][len(result.group(0)):],
                         link
                     )
@@ -322,7 +398,7 @@ class Checker():
                     raise ParseError(
                         f"Duplicate connection: {
                             result.group(1)}-{
-                            result.group(2)}"
+                            result.group(2)} [line: {n}]"
                     )
                 links.append(link)
         for i in range(len(to_remove) - 1, -1, -1):
@@ -353,8 +429,10 @@ class Parser():
         """
         try:
             with open(path, "r") as f:
-                lines = [
-                    x for x in f.readlines() if (
+                Checker.raw_lines = f.readlines()
+            
+            lines = [
+                    x for x in Checker.raw_lines if (
                         x.strip() and not x.lstrip().startswith("#")
                     )
                 ]
@@ -371,6 +449,10 @@ class Parser():
             err_mess = "Invalid input"
             raise ParseError(f"{err_mess}: {error}")
         if lines:
+            print("The following lines are invalid:\n")
+            for line in lines:
+                line_number = Checker.raw_lines.index(line) + 1
+                print(f"\t[line:{line_number}] - '{line.strip()}'")
             raise ParseError(
-                f"Invalid line detected in the input file:\n{lines}"
+                f""
             )
