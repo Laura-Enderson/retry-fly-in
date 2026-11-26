@@ -53,13 +53,13 @@ class Utils():
                 min_y = y
             if y > max_y:
                 max_y = y
-        if (Gui.origin[0] + ((min_x * d) + 100) * scale) < 0:
+        if (Gui.origin[0] + ((min_x * d) - 50) * scale) < 0:
             scale -= 0.1
-        elif (Gui.origin[0] + ((max_x * d) + 100) * scale) > Gui.width:
+        elif (Gui.origin[0] + ((max_x * d) + 50) * scale) > Gui.width:
             scale -= 0.1
-        elif (Gui.origin[0] + ((min_y * d) + 100) * scale) < 0:
+        elif (Gui.origin[0] + ((min_y * d) - 50) * scale) < 0:
             scale -= 0.1
-        elif (Gui.origin[0] + ((max_y * d) + 100) * scale) > Gui.height:
+        elif (Gui.origin[0] + ((max_y * d) + 50) * scale) > Gui.height:
             scale -= 0.1
         if scale != i_scale:
             scale = Utils.define_scale(scale, graph)
