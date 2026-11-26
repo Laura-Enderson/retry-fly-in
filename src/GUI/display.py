@@ -243,7 +243,6 @@ class Gui():
             return 1
         running = True
         while running:
-            Gui.graph_data["all_rect"].center = Gui.catch_input()
             running = Gui.handle_events()
             if not running:
                 return 0
@@ -327,7 +326,6 @@ class Gui():
         running = True
         loc = 0
         while running:
-            Gui.graph_data["all_rect"].center = Gui.catch_input()
             window.fill(Gui.black)
             Gui.graph_data["all"].fill(Gui.black)
             drones_surf.fill(Gui.black)
@@ -351,7 +349,6 @@ class Gui():
             while now < end:
                 now = time.perf_counter() * 1000
                 running = Gui.handle_events()
-                Gui.graph_data["all_rect"].center = Gui.catch_input()
                 if not running:
                     break
         return 0

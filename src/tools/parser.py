@@ -52,7 +52,7 @@ class Checker():
                 "The first line must define the number"
                 " of drones using nb_drones: <positive_integer>"
             )
-        result = re.fullmatch(r"nb_drones:\s*(\d+)\s*", lines[0])
+        result = re.fullmatch(r"\s*nb_drones:\s*(\d+)\s*", lines[0])
         if not result or int(result.group(1)) <= 0:
             raise ParseError(
                 "The first line must define the number"
@@ -134,7 +134,7 @@ class Checker():
         start = []
         for i in range(len(lines)):
             result = re.match(
-                r"start_hub:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i])
+                r"\s*start_hub:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i])
             if result:
                 start.append({"match": result, "loc": i})
         if len(start) != 1:
@@ -176,7 +176,7 @@ class Checker():
         end: list[dict[str, Any]] = []
         for i in range(len(lines)):
             result = re.match(
-                r"end_hub:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i])
+                r"\s*end_hub:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i])
             if result:
                 end.append({"match": result, "loc": i})
         if len(end) != 1:
@@ -225,7 +225,9 @@ class Checker():
                 "color": "white",
                 "max_drones": 1
             }
-            result = re.match(r"hub:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i])
+            result = re.match(
+                r"\s*hub:\s*(\w+)\s+(-?\d+)\s+(-?\d+)\s*", lines[i]
+                )
             if result:
                 hub["name"] = result.group(1)
                 hub["coord"][0] = result.group(2)
@@ -296,7 +298,7 @@ class Checker():
                 "linked_zones": set(),
                 "max_link_capacity": 1
             }
-            result = re.match(r"connection:\s*(\w+)-(\w+)\s*", lines[i])
+            result = re.match(r"\s*connection:\s*(\w+)-(\w+)\s*", lines[i])
             if result:
                 link["linked_zones"] = {result.group(1), result.group(2)}
                 if len(link["linked_zones"]) == 1:
