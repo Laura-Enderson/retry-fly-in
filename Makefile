@@ -5,7 +5,7 @@ install:
 	@uv sync
 
 debug:
-	@uv run python fly-in.py
+	@uv run python -m pdb fly-in.py
 
 clean:
 	@rm -rf .mypy_cache
